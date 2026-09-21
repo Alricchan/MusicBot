@@ -1,0 +1,6 @@
+services:
+  buddybot:
+    build: .
+    container_name: buddybot
+    restart: unless-stopped
+    env_file: .env
