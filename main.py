@@ -29,7 +29,7 @@ CONTROLS = {
     "\u23ef\ufe0f": "toggle",   # ⏯️
     "\u23ed\ufe0f": "skip",     # ⏭️
     "\u23f9\ufe0f": "stop",     # ⏹️
-    "\ud83d\udccb": "queue",    # 📋 (New list control!)
+    "\ud83d\udccb": "queue",    # 📋 
 }
 ACTIONS = {emoji.replace("\ufe0f", ""): action for emoji, action in CONTROLS.items()}
 
@@ -52,7 +52,9 @@ def spawn(coro) -> None:
 
 class BuddyBot(discord.Client):
     def __init__(self):
-        super().__init__(intents=discord.Intents.default())
+        intents = discord.Intents.default()
+        intents.reactions = True 
+        super().__init__(intents=intents)
         self.tree = app_commands.CommandTree(self)
 
     async def setup_hook(self):
@@ -127,7 +129,7 @@ def play_next(guild: discord.Guild, loop: asyncio.AbstractEventLoop) -> None:
 
     vc.play(source, after=after)
     spawn(post_panel(guild, track["title"]))
-    spawn(clear_queue_message(guild.id))  # Delete queue text when a new song rolls over
+    loop.call_soon_threadsafe(lambda: spawn(clear_queue_message(guild.id))) 
 
 
 async def stop_all(guild: discord.Guild) -> None:
@@ -171,8 +173,7 @@ async def post_panel(guild: discord.Guild, title: str) -> None:
     try:
         msg = await channel.send(
             f"Now playing: **{title}**\n"
-            "⏮️ restart  ·  ⏯️ pause/resume  ·  ⏭️ skip  ·  ⏹️ stop  ·  📋 show queue"
-        )
+            )
         panels[guild.id] = msg
         for emoji in CONTROLS:
             await msg.add_reaction(emoji)
